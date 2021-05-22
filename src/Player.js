@@ -39,7 +39,15 @@ class Player extends Character {
     this.questTracker = new QuestTracker(this, questData.active, questData.completed);
     this.commandQueue = new CommandQueue();
     this.role = data.role || PlayerRoles.PLAYER;
-
+    this.channelColors = new Map()
+    
+    for(const [channel, outer] of Object.entries(data.channelColors)) {
+      this.channelColors.set(channel, new Map());
+      for(const [part, color] of Object.entries(data.channelColors[channel])) {
+        this.channelColors.get(channel).set(part, color);
+      }
+    }
+    
     // Default max inventory size config
     if (!isFinite(this.inventory.getMax())) {
       this.inventory.setMax(Config.get('defaultMaxPlayerInventory') || 20);
@@ -219,7 +227,7 @@ class Player extends Character {
 
   serialize() {
     let data = Object.assign(super.serialize(), {
-      account: this.account.name,
+      account: this.account.username,
       experience: this.experience,
       inventory: this.inventory && this.inventory.serialize(),
       metadata: this.metadata,
@@ -239,7 +247,25 @@ class Player extends Character {
       data.equipment = null;
     }
 
+    if (this.channelColors instanceof Map) {
+      let cc = new Map();
+      for (let [channel, outer] of this.channelColors) {
+        cc[channel] = new Map();
+        for (let [part, color] of this.channelColors.get(channel)) {
+          cc[channel][part] = color;
+        }
+      }
+      data.channelColors = cc;
+    }
+    else {
+      data.channelColors = null
+    }
+
     return data;
+  }
+
+  get isPc() {
+    return true;
   }
 }
 

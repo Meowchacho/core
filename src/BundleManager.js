@@ -15,7 +15,8 @@ const fs = require('fs'),
     Skill = require('./Skill'),
     SkillType = require('./SkillType'),
     Helpfile = require('./Helpfile'),
-    Logger = require('./Logger')
+    Logger = require('./Logger'),
+    ChannelManager = require('./ChannelManager')
 ;
 
 const { AttributeFormula } = require('./Attribute');
@@ -447,7 +448,7 @@ class BundleManager {
 
     channels.forEach(channel => {
       channel.bundle = bundle;
-      this.state.ChannelManager.add(channel);
+      ChannelManager.add(channel);
     });
 
     Logger.verbose(`\tENDLOAD: Channels...`);

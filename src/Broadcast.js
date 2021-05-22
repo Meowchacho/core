@@ -1,8 +1,11 @@
 'use strict';
 
 const ansi = require('sty');
+const Logger = require('./Logger')
+
 ansi.enable(); // force ansi on even when there isn't a tty for the server
 const wrap = require('wrap-ansi');
+const ChannelManager = require('./ChannelManager');
 
 /** @typedef {{getBroadcastTargets: function(): Array}} */
 var Broadcastable;
@@ -20,14 +23,12 @@ class Broadcast {
    * @param {?function(target, message): string} formatter=null Function to call to format the
    *   message to each target
    */
-  static at(source, message = '', wrapWidth = false, useColor = true, formatter = null) {
+  static at(type, source, message = '', prefix = '',suffix ='', wrapWidth = false, useColor = true) {
     if (!Broadcast.isBroadcastable(source)) {
       throw new Error(`Tried to broadcast message to non-broadcastable object: MESSAGE [${message}]`);
     }
 
     useColor = typeof useColor === 'boolean' ? useColor : true;
-    formatter = formatter || ((target, message) => message);
-
     message = Broadcast._fixNewlines(message);
 
     for (const target of source.getBroadcastTargets()) {
@@ -40,8 +41,30 @@ class Broadcast {
         target.socket._prompted = false;
       }
 
-      let targetMessage = formatter(target, message);
-      targetMessage = wrapWidth ? Broadcast.wrap(targetMessage, wrapWidth) : ansi.parse(targetMessage);
+      if (target.isPc && target.channelColors) {
+        Logger.verbose(`Broadcasting ${type} to a PC with color preferences`);
+        let prefixColor = null;
+        let messageColor = null; 
+        
+        
+        if(target.channelColors.get(type)) {
+          prefixColor = target.channelColors.get(type).get("pre");
+          messageColor = target.channelColors.get(type).get("msg");
+        }
+
+        if (!prefixColor && ChannelManager.get(type)) {
+          prefixColor = ChannelManager.get(type).prefixColor || null
+        }
+        if (!messageColor && ChannelManager.get(type)) {
+          messageColor = ChannelManager.get(type).messageColor || null
+        }
+        prefix = this.colorify(prefix, prefixColor);
+        message = this.colorify(message, messageColor);
+        suffix = this.colorify(suffix, prefixColor); //Suffix color is the same as prefix color damnit
+      }
+
+      let completeMessage = `${prefix}${message}${suffix}`;
+      let targetMessage = wrapWidth ? Broadcast.wrap(completeMessage, wrapWidth) : ansi.parse(completeMessage);
       target.socket.write(targetMessage);
     }
   }
@@ -56,7 +79,7 @@ class Broadcast {
    * @param {boolean} useColor
    * @param {function} formatter
    */
-  static atExcept(source, message, excludes, wrapWidth, useColor, formatter) {
+  static atExcept(type, source, excludes, message, prefix, suffix, wrapWidth, useColor) {
     if (!Broadcast.isBroadcastable(source)) {
       throw new Error(`Tried to broadcast message to non-broadcastable object: MESSAGE [${message}]`);
     }
@@ -71,7 +94,7 @@ class Broadcast {
       getBroadcastTargets: () => targets
     };
 
-    Broadcast.at(newSource, message, wrapWidth, useColor, formatter);
+    Broadcast.at(type,newSource, message, prefix, suffix, wrapWidth, useColor);
   }
 
   /**
@@ -83,36 +106,32 @@ class Broadcast {
    * @param {number|boolean} wrapWidth
    * @param {boolean} useColor
    */
-  static atFormatted(source, message, formatter, wrapWidth, useColor) {
-    Broadcast.at(source, message, wrapWidth, useColor, formatter);
+  static atFormatted(type, source, message, prefix, suffix, wrapWidth, useColor) {
+    Broadcast.at(type, source, message, prefix, suffix, wrapWidth, useColor);
   }
 
   /**
    * `Broadcast.at` with a newline
    * @see {@link Broadcast#at}
    */
-  static sayAt(source, message, wrapWidth, useColor, formatter) {
-    Broadcast.at(source, message, wrapWidth, useColor, (target, message) => {
-      return (formatter ? formatter(target, message) : message ) + '\r\n';
-    });
+  static sayAt(type, source, message, prefix, suffix, wrapWidth, useColor) {
+    Broadcast.at(type, source, message, prefix, suffix  + '\r\n', wrapWidth, useColor);
   }
 
   /**
    * `Broadcast.atExcept` with a newline
    * @see {@link Broadcast#atExcept}
    */
-  static sayAtExcept(source, message, excludes, wrapWidth, useColor, formatter) {
-    Broadcast.atExcept(source, message, excludes, wrapWidth, useColor, (target, message) => {
-      return (formatter ? formatter(target, message) : message ) + '\r\n';
-    });
+  static sayAtExcept(type, source, excludes, message, prefix, suffix, wrapWidth, useColor) {
+    Broadcast.atExcept(type, source, excludes, message, prefix, suffix  + '\r\n', wrapWidth, useColor);
   }
 
   /**
    * `Broadcast.atFormatted` with a newline
    * @see {@link Broadcast#atFormatted}
    */
-  static sayAtFormatted(source, message, formatter, wrapWidth, useColor) {
-    Broadcast.sayAt(source, message, wrapWidth, useColor, formatter);
+  static sayAtFormatted(type, source, message, prefix, suffix, wrapWidth, useColor) {
+    Broadcast.sayAt(type, source, message, prefix, suffix, wrapWidth, useColor);
   }
 
   /**
@@ -124,21 +143,21 @@ class Broadcast {
    */
   static prompt(player, extra, wrapWidth, useColor) {
     player.socket._prompted = false;
-    Broadcast.at(player, '\r\n' + player.interpolatePrompt(player.prompt, extra) + ' ', wrapWidth, useColor);
+    Broadcast.at('prompt',player,'','\r\n' + player.interpolatePrompt(player.prompt, extra) + ' ', wrapWidth, useColor);
     let needsNewline = player.extraPrompts.size > 0;
     if (needsNewline) {
-      Broadcast.sayAt(player);
+      Broadcast.sayAt('prompt',player);
     }
 
     for (const [id, extraPrompt] of player.extraPrompts) {
-      Broadcast.sayAt(player, extraPrompt.renderer(), wrapWidth, useColor);
+      Broadcast.sayAt('prompt', player, extraPrompt.renderer(), '', wrapWidth, useColor);
       if (extraPrompt.removeOnRender) {
         player.removePrompt(id);
       }
     }
 
     if (needsNewline) {
-      Broadcast.at(player, '> ');
+      Broadcast.at('prompt',player, '> ');
     }
 
     player.socket._prompted = true;
@@ -257,6 +276,18 @@ class Broadcast {
 
   static isBroadcastable(source) {
     return source && typeof source.getBroadcastTargets === 'function';
+  }
+
+  static colorify(message, color) {
+    if (!color || !message) {
+      return message;
+    }
+
+    const colors = Array.isArray(color) ? color : [color];
+    const open = colors.map(colorO => `<${colorO}>`).join('');
+    const close = colors.reverse().map(colorC => `</${colorC}>`).join('');
+
+    return open + message + close;
   }
 }
 

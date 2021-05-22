@@ -30,19 +30,20 @@ class Channel {
     if (!config.audience) {
       throw new Error(`Channel ${config.name} is missing a valid audience.`);
     }
+
     this.name = config.name;
     this.minRequiredRole = typeof config.minRequiredRole !== 'undefined' ? config.minRequiredRole : null;
     this.description = config.description;
     this.bundle = config.bundle || null; // for debugging purposes, which bundle it came from
     this.audience = config.audience || (new WorldAudience());
-    this.color = config.color || null;
+    this.prefixColor = config.prefixColor || null;
+    this.messageColor = config.messageColor || null;
     this.aliases = config.aliases;
-    this.formatter = config.formatter || {
-      sender: this.formatToSender.bind(this),
-      target: this.formatToReceipient.bind(this),
-    };
+    this.prefixToTarget = config.prefixToTarget;
+    this.prefixToSource = config.prefixToSource;
+    this.prefixToOthers = config.prefixToOthers;
+    this.suffix = config.suffix;
   }
-
   /**
    * @param {GameState} state
    * @param {Player}    sender
@@ -50,12 +51,10 @@ class Channel {
    * @fires GameEntity#channelReceive
    */
   send(state, sender, message) {
-
     // If they don't include a message, explain how to use the channel.
     if (!message.length) {
       throw new NoMessageError();
     }
-
     if (!this.audience) {
       throw new Error(`Channel [${this.name} has invalid audience [${this.audience}]`);
     }
@@ -70,21 +69,28 @@ class Channel {
     // Allow audience to change message e.g., strip target name.
     message = this.audience.alterMessage(message);
 
-    // Private channels also send the target player to the formatter
-    if (this.audience instanceof PrivateAudience) {
-      if (!targets.length) {
-        throw new NoRecipientError();
-      }
-      Broadcast.sayAt(sender, this.formatter.sender(sender, targets[0], message, this.colorify.bind(this)));
-    } else {
-      Broadcast.sayAt(sender, this.formatter.sender(sender, null, message, this.colorify.bind(this)));
+    if (!this.prefixToOthers){
+      this.prefixToOthers = '`[${this.name}] ${sender.name}: `';
+    }
+    if (!this.prefixToSource){
+      this.prefixToSource = '`[${this.name}] ${sender.name}: `';
+    }
+    if (!this.prefixToTarget){
+      this.prefixToTarget = '`[${this.name}] ${sender.name}: `';
+    }
+    if (!this.suffix) {
+      this.suffix = '';
     }
 
-    // send to audience targets
-    Broadcast.sayAtFormatted(this.audience, message, (target, message) => {
-      return this.formatter.target(sender, target, message, this.colorify.bind(this));
-    });
-
+    Broadcast.sayAt(this.name, sender, message, eval(this.prefixToSource), eval(this.suffix));
+    // Private channels also send the target player to the formatter
+    if (this.audience instanceof PrivateAudience) {
+      Broadcast.sayAt(this.name, this.audience, message, eval(this.prefixToTarget), eval(this.suffix));
+    }
+    else {
+      // send to audience targets
+      Broadcast.sayAt(this.name, this.audience, message, eval(this.prefixToOthers), eval(this.suffix));
+    }
     // strip color tags
     const rawMessage = message.replace(/\<\/?\w+?\>/gm, '');
 
@@ -103,10 +109,10 @@ class Channel {
   }
 
   describeSelf(sender) {
-    Broadcast.sayAt(sender, `\r\nChannel: ${this.name}`);
-    Broadcast.sayAt(sender, 'Syntax: ' + this.getUsage());
+    Broadcast.sayAt(sender, 'other', '', `\r\nChannel: ${this.name}`);
+    Broadcast.sayAt(sender, 'other', '', 'Syntax: ' + this.getUsage());
     if (this.description) {
-      Broadcast.sayAt(sender, this.description);
+      Broadcast.sayAt(sender, 'other', '', this.description);
     }
   }
 
@@ -117,49 +123,11 @@ class Channel {
 
     return `${this.name} [message]`;
   }
-
-  /**
-   * How to render the message the player just sent to the channel
-   * E.g., you may want "chat" to say "You chat, 'message here'"
-   * @param {Player} sender
-   * @param {string} message
-   * @param {Function} colorify
-   * @return {string}
-   */
-  formatToSender(sender, target, message, colorify) {
-    return colorify(`[${this.name}] ${sender.name}: ${message}`);
-  }
-
-  /**
-   * How to render the message to everyone else
-   * E.g., you may want "chat" to say "Playername chats, 'message here'"
-   * @param {Player} sender
-   * @param {Player} target
-   * @param {string} message
-   * @param {Function} colorify
-   * @return {string}
-   */
-  formatToReceipient(sender, target, message, colorify) {
-    return this.formatToSender(sender, target, message, colorify);
-  }
-
-  colorify(message) {
-    if (!this.color) {
-      return message;
-    }
-
-    const colors = Array.isArray(this.color) ? this.color : [this.color];
-
-    const open = colors.map(color => `<${color}>`).join('');
-    const close = colors.reverse().map(color => `</${color}>`).join('');
-
-    return open + message + close;
-  }
 }
 
-class NoPartyError extends Error {}
-class NoRecipientError extends Error {}
-class NoMessageError extends Error {}
+class NoPartyError extends Error { }
+class NoRecipientError extends Error { }
+class NoMessageError extends Error { }
 
 module.exports = {
   Channel,
