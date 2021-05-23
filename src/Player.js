@@ -28,7 +28,7 @@ class Player extends Character {
     this.account = data.account || null;
     this.experience = data.experience || 0;
     this.extraPrompts = new Map();
-    this.password  = data.password;
+    this.password = data.password;
     this.prompt = data.prompt || '> ';
     this.socket = data.socket || null;
     const questData = Object.assign({
@@ -40,14 +40,14 @@ class Player extends Character {
     this.commandQueue = new CommandQueue();
     this.role = data.role || PlayerRoles.PLAYER;
     this.channelColors = new Map()
-    
-    for(const [channel, outer] of Object.entries(data.channelColors)) {
+
+    for (const [channel, outer] of Object.entries(data.channelColors)) {
       this.channelColors.set(channel, new Map());
-      for(const [part, color] of Object.entries(data.channelColors[channel])) {
+      for (const [part, color] of Object.entries(data.channelColors[channel])) {
         this.channelColors.get(channel).set(part, color);
       }
     }
-    
+
     // Default max inventory size config
     if (!isFinite(this.inventory.getMax())) {
       this.inventory.setMax(Config.get('defaultMaxPlayerInventory') || 20);
@@ -169,6 +169,25 @@ class Player extends Character {
      */
     this.emit('enterRoom', nextRoom);
   }
+/**
+ * 
+ * @param {String} channel 
+ * @param {String} color 
+ */
+  setChannelColor(channel, part, color) {
+    if (!this.channelColors.get(channel)) {
+      this.channelColors.set(channel, new Map());
+      this.channelColors.get(channel).set('pre','');
+      this.channelColors.get(channel).set('msg','');
+    }
+    if (part == "prefix") {
+      part = "pre"
+    }
+    else {
+      part = "msg"
+    }
+    this.channelColors.get(channel).set(part,color);
+  }
 
   save(callback) {
     if (!this.__hydrated) {
@@ -239,7 +258,7 @@ class Player extends Character {
 
     if (this.equipment instanceof Map) {
       let eq = {};
-      for (let [ slot, item ] of this.equipment) {
+      for (let [slot, item] of this.equipment) {
         eq[slot] = item.serialize();
       }
       data.equipment = eq;

@@ -79,7 +79,7 @@ class Channel {
       this.prefixToTarget = '`[${this.name}] ${sender.name}: `';
     }
     if (!this.suffix) {
-      this.suffix = '';
+      this.suffix = '``';
     }
 
     Broadcast.sayAt(this.name, sender, message, eval(this.prefixToSource), eval(this.suffix));

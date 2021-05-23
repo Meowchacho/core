@@ -46,18 +46,17 @@ class Broadcast {
         let prefixColor = null;
         let messageColor = null; 
         
-        
         if(target.channelColors.get(type)) {
           prefixColor = target.channelColors.get(type).get("pre");
           messageColor = target.channelColors.get(type).get("msg");
         }
-
         if (!prefixColor && ChannelManager.get(type)) {
           prefixColor = ChannelManager.get(type).prefixColor || null
         }
         if (!messageColor && ChannelManager.get(type)) {
           messageColor = ChannelManager.get(type).messageColor || null
         }
+
         prefix = this.colorify(prefix, prefixColor);
         message = this.colorify(message, messageColor);
         suffix = this.colorify(suffix, prefixColor); //Suffix color is the same as prefix color damnit
@@ -83,7 +82,6 @@ class Broadcast {
     if (!Broadcast.isBroadcastable(source)) {
       throw new Error(`Tried to broadcast message to non-broadcastable object: MESSAGE [${message}]`);
     }
-
     // Could be an array or a single target.
     excludes = [].concat(excludes);
 
@@ -95,19 +93,6 @@ class Broadcast {
     };
 
     Broadcast.at(type,newSource, message, prefix, suffix, wrapWidth, useColor);
-  }
-
-  /**
-   * Helper wrapper around Broadcast.at to be used when you're using a formatter
-   * @see {@link Broadcast#at}
-   * @param {Broadcastable} source
-   * @param {string} message
-   * @param {function} formatter
-   * @param {number|boolean} wrapWidth
-   * @param {boolean} useColor
-   */
-  static atFormatted(type, source, message, prefix, suffix, wrapWidth, useColor) {
-    Broadcast.at(type, source, message, prefix, suffix, wrapWidth, useColor);
   }
 
   /**
@@ -124,14 +109,6 @@ class Broadcast {
    */
   static sayAtExcept(type, source, excludes, message, prefix, suffix, wrapWidth, useColor) {
     Broadcast.atExcept(type, source, excludes, message, prefix, suffix  + '\r\n', wrapWidth, useColor);
-  }
-
-  /**
-   * `Broadcast.atFormatted` with a newline
-   * @see {@link Broadcast#atFormatted}
-   */
-  static sayAtFormatted(type, source, message, prefix, suffix, wrapWidth, useColor) {
-    Broadcast.sayAt(type, source, message, prefix, suffix, wrapWidth, useColor);
   }
 
   /**

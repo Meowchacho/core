@@ -2,8 +2,6 @@
 
 /**
  * Contains registered channels
- *
- * TODO: should probably refactor this to just extend `Map`
  */
 class ChannelManager {
   static channels = new Map();
