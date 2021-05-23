@@ -9,6 +9,7 @@ const QuestTracker = require('./QuestTracker');
 const Room = require('./Room');
 const Logger = require('./Logger');
 const PlayerRoles = require('./PlayerRoles');
+const v8 = require('v8');
 
 /**
  * @property {Account} account
@@ -41,13 +42,14 @@ class Player extends Character {
     this.role = data.role || PlayerRoles.PLAYER;
     this.channelColors = new Map()
 
-    for (const [channel, outer] of Object.entries(data.channelColors)) {
-      this.channelColors.set(channel, new Map());
-      for (const [part, color] of Object.entries(data.channelColors[channel])) {
-        this.channelColors.get(channel).set(part, color);
-      }
-    }
-
+    // for (const [channel, outer] of Object.entries(data.channelColors)) {
+    //   this.channelColors.set(channel, new Map());
+    //   for (const [part, color] of Object.entries(data.channelColors[channel])) {
+    //     this.channelColors.get(channel).set(part, color);
+    //   }
+    // }
+    this.channelColors = new Map(Object.entries(data.channelColors)); //JSON.parse(JSON.stringify(data.channelColors));
+    
     // Default max inventory size config
     if (!isFinite(this.inventory.getMax())) {
       this.inventory.setMax(Config.get('defaultMaxPlayerInventory') || 20);
@@ -176,9 +178,7 @@ class Player extends Character {
  */
   setChannelColor(channel, part, color) {
     if (!this.channelColors.get(channel)) {
-      this.channelColors.set(channel, new Map());
-      this.channelColors.get(channel).set('pre','');
-      this.channelColors.get(channel).set('msg','');
+      this.channelColors.set(channel, {'pre':null,'msg':null} );
     }
     if (part == "prefix") {
       part = "pre"
@@ -186,7 +186,7 @@ class Player extends Character {
     else {
       part = "msg"
     }
-    this.channelColors.get(channel).set(part,color);
+    this.channelColors.get(channel)[part] = color;
   }
 
   save(callback) {
@@ -267,14 +267,7 @@ class Player extends Character {
     }
 
     if (this.channelColors instanceof Map) {
-      let cc = new Map();
-      for (let [channel, outer] of this.channelColors) {
-        cc[channel] = new Map();
-        for (let [part, color] of this.channelColors.get(channel)) {
-          cc[channel][part] = color;
-        }
-      }
-      data.channelColors = cc;
+      data.channelColors = v8.deserialize(v8.serialize(this.channelColors));
     }
     else {
       data.channelColors = null

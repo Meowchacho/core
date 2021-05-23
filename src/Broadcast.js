@@ -47,8 +47,8 @@ class Broadcast {
         let messageColor = null; 
         
         if(target.channelColors.get(type)) {
-          prefixColor = target.channelColors.get(type).get("pre");
-          messageColor = target.channelColors.get(type).get("msg");
+          prefixColor = target.channelColors.get(type)['pre'];
+          messageColor = target.channelColors.get(type)['msg'];
         }
         if (!prefixColor && ChannelManager.get(type)) {
           prefixColor = ChannelManager.get(type).prefixColor || null
