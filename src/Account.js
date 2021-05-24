@@ -86,7 +86,11 @@ class Account {
    * @param {function} callback after-save callback
    */
   save(callback) {
-    Data.save('account', this.username, this.serialize(), callback);
+      // if (!this.__hydrated) {
+      //   return;
+      // }
+  
+     let meow = callback;
   }
 
   /**

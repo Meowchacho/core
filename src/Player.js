@@ -42,13 +42,7 @@ class Player extends Character {
     this.role = data.role || PlayerRoles.PLAYER;
     this.channelColors = new Map()
 
-    // for (const [channel, outer] of Object.entries(data.channelColors)) {
-    //   this.channelColors.set(channel, new Map());
-    //   for (const [part, color] of Object.entries(data.channelColors[channel])) {
-    //     this.channelColors.get(channel).set(part, color);
-    //   }
-    // }
-    this.channelColors = new Map(Object.entries(data.channelColors)); //JSON.parse(JSON.stringify(data.channelColors));
+    this.channelColors = new Map(Object.entries(data.channelColors?data.channelColors:new Map())); //JSON.parse(JSON.stringify(data.channelColors));
     
     // Default max inventory size config
     if (!isFinite(this.inventory.getMax())) {

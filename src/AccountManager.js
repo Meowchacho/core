@@ -56,6 +56,20 @@ class AccountManager {
 
     return account;
   }
+
+    /**
+   * Save an account
+   * @fires Account#save
+   */
+     async save(account) {
+      if (!this.loader) {
+        throw new Error('No entity loader configured for accounts');
+      }
+  
+      await this.loader.update(account.username, account.serialize());
+  
+    }
+  
 }
 
 module.exports = AccountManager;
