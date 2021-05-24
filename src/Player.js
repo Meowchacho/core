@@ -173,8 +173,9 @@ class Player extends Character {
   }
 /**
  * 
- * @param {String} channel 
- * @param {String} color 
+ * @param {String} channel to set
+ * @param {String} part of that channel (prefix or message)
+ * @param {String} color to set that channel + part to
  */
   setChannelColor(channel, part, color) {
     if (!this.channelColors.get(channel)) {

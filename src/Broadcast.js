@@ -1,10 +1,8 @@
 'use strict';
 
-const ansi = require('sty');
-const Logger = require('./Logger')
-
-ansi.enable(); // force ansi on even when there isn't a tty for the server
 const wrap = require('wrap-ansi');
+const colors = require('./Colors')
+const Logger = require('./Logger')
 const ChannelManager = require('./ChannelManager');
 
 /** @typedef {{getBroadcastTargets: function(): Array}} */
@@ -23,10 +21,13 @@ class Broadcast {
    * @param {?function(target, message): string} formatter=null Function to call to format the
    *   message to each target
    */
-  static at(type, source, message = '', prefix = '',suffix ='', wrapWidth = false, useColor = true) {
+  static at(type, source, message = '', prefix = '', suffix = '', wrapWidth = false, useColor = true) {
     if (!Broadcast.isBroadcastable(source)) {
       throw new Error(`Tried to broadcast message to non-broadcastable object: MESSAGE [${message}]`);
     }
+    let prefixColor = '';
+    let messageColor = '';
+    let suffixColor = '';
 
     useColor = typeof useColor === 'boolean' ? useColor : true;
     message = Broadcast._fixNewlines(message);
@@ -43,10 +44,8 @@ class Broadcast {
 
       if (target.isPc && target.channelColors) {
         Logger.verbose(`Broadcasting ${type} to a PC with color preferences`);
-        let prefixColor = null;
-        let messageColor = null; 
-        
-        if(target.channelColors.get(type)) {
+
+        if (target.channelColors.get(type)) {
           prefixColor = target.channelColors.get(type)['pre'];
           messageColor = target.channelColors.get(type)['msg'];
         }
@@ -57,13 +56,11 @@ class Broadcast {
           messageColor = ChannelManager.get(type).messageColor || null
         }
 
-        prefix = this.colorify(prefix, prefixColor);
-        message = this.colorify(message, messageColor);
-        suffix = this.colorify(suffix, prefixColor); //Suffix color is the same as prefix color damnit
       }
 
-      let completeMessage = `${prefix}${message}${suffix}`;
-      let targetMessage = wrapWidth ? Broadcast.wrap(completeMessage, wrapWidth) : ansi.parse(completeMessage);
+      let completeMessage = `${prefixColor}${prefix}${messageColor}${message}${suffixColor}${suffix}`;
+      completeMessage = colors.parseColoredString(completeMessage);
+      let targetMessage = wrapWidth ? Broadcast.wrap(completeMessage, wrapWidth) : completeMessage;
       target.socket.write(targetMessage);
     }
   }
@@ -92,7 +89,7 @@ class Broadcast {
       getBroadcastTargets: () => targets
     };
 
-    Broadcast.at(type,newSource, message, prefix, suffix, wrapWidth, useColor);
+    Broadcast.at(type, newSource, message, prefix, suffix, wrapWidth, useColor);
   }
 
   /**
@@ -100,7 +97,7 @@ class Broadcast {
    * @see {@link Broadcast#at}
    */
   static sayAt(type, source, message, prefix, suffix, wrapWidth, useColor) {
-    Broadcast.at(type, source, message, prefix, suffix  + '\r\n', wrapWidth, useColor);
+    Broadcast.at(type, source, message, prefix, suffix + '{x\r\n', wrapWidth, useColor);
   }
 
   /**
@@ -108,7 +105,7 @@ class Broadcast {
    * @see {@link Broadcast#atExcept}
    */
   static sayAtExcept(type, source, excludes, message, prefix, suffix, wrapWidth, useColor) {
-    Broadcast.atExcept(type, source, excludes, message, prefix, suffix  + '\r\n', wrapWidth, useColor);
+    Broadcast.atExcept(type, source, excludes, message, prefix, suffix + '{x\r\n', wrapWidth, useColor);
   }
 
   /**
@@ -120,10 +117,10 @@ class Broadcast {
    */
   static prompt(player, extra, wrapWidth, useColor) {
     player.socket._prompted = false;
-    Broadcast.at('prompt',player,'','\r\n' + player.interpolatePrompt(player.prompt, extra) + ' ', wrapWidth, useColor);
+    Broadcast.at('prompt', player, '', '\r\n' + player.interpolatePrompt(player.prompt, extra) + ' ', wrapWidth, useColor);
     let needsNewline = player.extraPrompts.size > 0;
     if (needsNewline) {
-      Broadcast.sayAt('prompt',player);
+      Broadcast.sayAt('prompt', player);
     }
 
     for (const [id, extraPrompt] of player.extraPrompts) {
@@ -134,7 +131,7 @@ class Broadcast {
     }
 
     if (needsNewline) {
-      Broadcast.at('prompt',player, '> ');
+      Broadcast.at('prompt', player, '> ');
     }
 
     player.socket._prompted = true;
@@ -157,11 +154,11 @@ class Broadcast {
     percent = Math.max(0, percent);
     width -= 3; // account for delimiters and tip of bar
     if (percent === 100) {
-        width++; // 100% bar doesn't have a second right delimiter
+      width++; // 100% bar doesn't have a second right delimiter
     }
     barChar = barChar[0];
     fillChar = fillChar[0];
-    const [ leftDelim, rightDelim ] = delimiters;
+    const [leftDelim, rightDelim] = delimiters;
     const openColor = `<${color}>`;
     const closeColor = `</${color}>`;
     let buf = openColor + leftDelim + "<bold>";
@@ -222,7 +219,7 @@ class Broadcast {
    * @return {string}
    */
   static wrap(message, width = 80) {
-    return Broadcast._fixNewlines(wrap(ansi.parse(message), width));
+    return Broadcast._fixNewlines(wrap(message, width));
   }
 
   /**
@@ -255,17 +252,13 @@ class Broadcast {
     return source && typeof source.getBroadcastTargets === 'function';
   }
 
-  static colorify(message, color) {
-    if (!color || !message) {
-      return message;
-    }
-
-    const colors = Array.isArray(color) ? color : [color];
-    const open = colors.map(colorO => `<${colorO}>`).join('');
-    const close = colors.reverse().map(colorC => `</${colorC}>`).join('');
-
-    return open + message + close;
-  }
+  // static colorify(message, color) {
+  //   let bleh = colors.shortToColor.get(color);
+  //   const colorStart = ansi256.fg.codes[bleh];
+  //   const colorEnd = ansi256.reset;
+  //   let coloredMessage = colorStart + message + colorEnd;
+  //   return coloredMessage;
+  // }
 }
 
 module.exports = Broadcast;
