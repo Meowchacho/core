@@ -1,6 +1,5 @@
 'use strict';
 const bcrypt = require('bcryptjs');
-const Data   = require('./Data');
 
 /**
  * Representation of a player's account
@@ -21,6 +20,7 @@ class Account {
     this.password   = data.password;
     this.banned = data.banned || false;
     this.deleted = data.deleted || false;
+    this.ansiSupport = data.ansiSupport || 'none';
     // Arbitrary data bundles are free to shove whatever they want in
     // WARNING: values must be JSON.stringify-able
     this.metadata = data.metadata || {};
@@ -135,13 +135,15 @@ class Account {
       characters,
       password,
       metadata,
+      ansiSupport
     } = this;
 
     return {
       username,
       characters,
       password,
-      metadata
+      metadata,
+      ansiSupport
     };
   }
 }

@@ -1,35 +1,40 @@
 'use strict';
-const ansi256 = require('ansi-256-colors')
+const ansi256 = require('ansi-256-colors');
+const ansiStyles = require('ansi-styles');
 
 const shortToColor = new Map([
-    ['{r', '1'],
-    ['{R', '9'],
-    ['{y', '3'],
-    ['{Y', '11'],
-    ['{c', '6'],
-    ['{C', '14'],
-    ['{m', '5'],
-    ['{M', '13'],
-    ['{g', '2'],
-    ['{G', '10'],
-    ['{b', '4'],
-    ['{B', '12'],
-    ['{w', '7'],
-    ['{W', '15']
+    ['{r', 31],
+    ['{R', 91],
+    ['{y', 33],
+    ['{Y', 93],
+    ['{c', 36],
+    ['{C', 96],
+    ['{m', 35],
+    ['{M', 95],
+    ['{g', 32],
+    ['{G', 92],
+    ['{b', 34],
+    ['{B', 94],
+    ['{w', 37],
+    ['{W', 97]
 ]);
-function replacer(match,p1, offset, string) {
+
+const nameToColor = new Map([
+
+]);
+function replacer(match, p1, offset, string) {
     let replacement = shortToColor.get(match);
-    if(!replacement) {
+    if (!replacement) {
         replacement = ansi256.reset;
     }
     else {
-        replacement = ansi256.fg.codes[replacement];
+        replacement =  ansiStyles.color.ansi.ansi(replacement)//ansi256.fg.codes[replacement];
     }
     return replacement;
 }
 
 function parseColoredString(coloredString) {
-    let ansiString = coloredString.replaceAll(new RegExp('\\{\\w','g'),replacer)
+    let ansiString = coloredString.replaceAll(new RegExp('\\{\\w', 'g'), replacer)
     return ansiString;
 }
 module.exports = { shortToColor, parseColoredString }

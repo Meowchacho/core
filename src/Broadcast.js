@@ -56,12 +56,13 @@ class Broadcast {
           messageColor = ChannelManager.get(type).messageColor || null
         }
 
+        suffixColor = prefixColor;
       }
 
       let completeMessage = `${prefixColor}${prefix}${messageColor}${message}${suffixColor}${suffix}`;
-      completeMessage = colors.parseColoredString(completeMessage);
-      let targetMessage = wrapWidth ? Broadcast.wrap(completeMessage, wrapWidth) : completeMessage;
-      target.socket.write(targetMessage);
+//      completeMessage = completeMessage;
+//      let targetMessage = wrapWidth ? Broadcast.wrap(completeMessage, wrapWidth) : completeMessage;
+      target.socket.write(completeMessage, 'utf-8', wrapWidth);
     }
   }
 

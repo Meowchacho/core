@@ -12,7 +12,7 @@ class EventUtil {
    * @return {function (string)}
    */
   static genWrite(socket) {
-    return string => socket.write(colors.parseColoredString(string));
+    return string => socket.write(string);
   }
 
   /**
@@ -21,7 +21,7 @@ class EventUtil {
    * @return {function (string)}
    */
   static genSay(socket) {
-    return string => socket.write(colors.parseColoredString(string + '\r\n'));
+    return string => socket.write(string + '\r\n');
   }
 }
 

@@ -10,6 +10,7 @@ const Room = require('./Room');
 const Logger = require('./Logger');
 const PlayerRoles = require('./PlayerRoles');
 const v8 = require('v8');
+const PlayerDescription = require('./PlayerDescription');
 
 /**
  * @property {Account} account
@@ -40,10 +41,8 @@ class Player extends Character {
     this.questTracker = new QuestTracker(this, questData.active, questData.completed);
     this.commandQueue = new CommandQueue();
     this.role = data.role || PlayerRoles.PLAYER;
-    this.channelColors = new Map()
-
     this.channelColors = new Map(Object.entries(data.channelColors?data.channelColors:new Map())); //JSON.parse(JSON.stringify(data.channelColors));
-    
+    this.description = new PlayerDescription(data.description);// Map(Object.entries(data.description?data.description:new Map()));
     // Default max inventory size config
     if (!isFinite(this.inventory.getMax())) {
       this.inventory.setMax(Config.get('defaultMaxPlayerInventory') || 20);
@@ -237,6 +236,7 @@ class Player extends Character {
       this.room = room;
       this.moveTo(room);
     }
+
   }
 
   serialize() {
@@ -249,6 +249,7 @@ class Player extends Character {
       prompt: this.prompt,
       quests: this.questTracker.serialize(),
       role: this.role,
+      description: this.description.serialize()
     });
 
     if (this.equipment instanceof Map) {
