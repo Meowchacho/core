@@ -1,7 +1,5 @@
 'use strict';
 
-const colors = require('./Colors');
-
 /**
  * Helper methods for colored output during input-events
  */

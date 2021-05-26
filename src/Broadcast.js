@@ -58,7 +58,7 @@ class Broadcast {
       }
 
       let completeMessage = `${prefixColor}${prefix}${messageColor}${message}${suffixColor}${suffix}`;
-      target.socket.write(compl, 'utf-8', wrapWidth);
+      target.socket.write(completeMessage, 'utf-8', wrapWidth);
     }
   }
 
