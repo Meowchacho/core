@@ -1,7 +1,5 @@
 'use strict';
 
-const wrap = require('wrap-ansi');
-const colors = require('./Colors')
 const Logger = require('./Logger')
 const ChannelManager = require('./ChannelManager');
 
@@ -60,9 +58,7 @@ class Broadcast {
       }
 
       let completeMessage = `${prefixColor}${prefix}${messageColor}${message}${suffixColor}${suffix}`;
-//      completeMessage = completeMessage;
-//      let targetMessage = wrapWidth ? Broadcast.wrap(completeMessage, wrapWidth) : completeMessage;
-      target.socket.write(completeMessage, 'utf-8', wrapWidth);
+      target.socket.write(compl, 'utf-8', wrapWidth);
     }
   }
 
@@ -214,52 +210,22 @@ class Broadcast {
   }
 
   /**
-   * Wrap a message to a given width. Note: Evaluates color tags
-   * @param {string}  message
-   * @param {?number} width   Defaults to 80
-   * @return {string}
-   */
-  static wrap(message, width = 80) {
-    return Broadcast._fixNewlines(wrap(message, width));
-  }
-
-  /**
    * Indent all lines of a given string by a given amount
    * @param {string} message
    * @param {number} indent
    * @return {string}
    */
   static indent(message, indent) {
-    message = Broadcast._fixNewlines(message);
-    const padding = Broadcast.line(indent, ' ');
-    return padding + message.replace(/\r\n/g, '\r\n' + padding);
+    // message = Broadcast._fixNewlines(message);
+    // const padding = Broadcast.line(indent, ' ');
+    // return padding + message.replace(/\r\n/g, '\r\n' + padding);
   }
 
-  /**
-   * Fix LF unpaired with CR for windows output
-   * @param {string} message
-   * @return {string}
-   * @private
-   */
-  static _fixNewlines(message) {
-    // Fix \n not in a \r\n pair to prevent bad rendering on windows
-    message = message.replace(/\r\n/g, '<NEWLINE>').split('\n');
-    message = message.join('\r\n').replace(/<NEWLINE>/g, '\r\n');
-    // fix sty's incredibly stupid default of always appending ^[[0m
-    return message.replace(/\x1B\[0m$/, '');
-  }
 
   static isBroadcastable(source) {
     return source && typeof source.getBroadcastTargets === 'function';
   }
 
-  // static colorify(message, color) {
-  //   let bleh = colors.shortToColor.get(color);
-  //   const colorStart = ansi256.fg.codes[bleh];
-  //   const colorEnd = ansi256.reset;
-  //   let coloredMessage = colorStart + message + colorEnd;
-  //   return coloredMessage;
-  // }
 }
 
 module.exports = Broadcast;
