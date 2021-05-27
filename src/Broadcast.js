@@ -92,7 +92,7 @@ class Broadcast {
    * `Broadcast.at` with a newline
    * @see {@link Broadcast#at}
    */
-  static sayAt(type, source, message, prefix, suffix, wrapWidth, useColor) {
+  static sayAt(type, source, message, prefix, suffix = '', wrapWidth, useColor) {
     Broadcast.at(type, source, message, prefix, suffix + '{x\r\n', wrapWidth, useColor);
   }
 
@@ -100,7 +100,7 @@ class Broadcast {
    * `Broadcast.atExcept` with a newline
    * @see {@link Broadcast#atExcept}
    */
-  static sayAtExcept(type, source, excludes, message, prefix, suffix, wrapWidth, useColor) {
+  static sayAtExcept(type, source, excludes, message, prefix, suffix = '', wrapWidth, useColor) {
     Broadcast.atExcept(type, source, excludes, message, prefix, suffix + '{x\r\n', wrapWidth, useColor);
   }
 
@@ -155,7 +155,7 @@ class Broadcast {
     barChar = barChar[0];
     fillChar = fillChar[0];
     const [leftDelim, rightDelim] = delimiters;
-    const openColor = `<${color}>`;
+    const openColor = `${color}`;
     const closeColor = `{x`;
     let buf = openColor + leftDelim + "";
     const widthPercent = Math.round((percent / 100) * width);
