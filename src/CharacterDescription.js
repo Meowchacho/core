@@ -17,6 +17,9 @@ class CharacterDescription {
         this._gender = genderData.gender
     }
 
+    get gender() {return this._gender};
+    get longDescription() {return this._longDescription}
+    get shortDescription() {return this._shortDescription}
     serialize() {
         return {
             shortDescription: this._shortDescription,

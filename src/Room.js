@@ -384,6 +384,10 @@ class Room extends GameEntity {
   getBroadcastTargets() {
     return [this, ...this.players, ...this.npcs];
   }
+
+  render() {
+    
+  }
 }
 
 module.exports = Room;

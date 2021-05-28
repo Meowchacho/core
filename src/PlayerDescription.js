@@ -20,7 +20,7 @@ class PlayerDescription extends CharacterDescription{
         const color = this._hair.get('color') || '';
         const style = this._hair.get('style') || '';
         const length = this._hair.get('length') || '';
-        return `${length}, ${color} ${style} hair.`
+        return `${length}, ${color}, and ${style}`;
     }
     set eyes(eyesData) {
         for(let [key, value] of Object.entries(eyesData)) {
@@ -28,8 +28,8 @@ class PlayerDescription extends CharacterDescription{
         }
     }
     describeEyes() {
-        const eyes = this.eyes.get(color);
-        return `${eyes} eyes.`;
+        const eyes = this._eyes.get('color') || '';
+        return `${eyes}`;
     }
 
     set skin(skinData) {
@@ -38,22 +38,22 @@ class PlayerDescription extends CharacterDescription{
         }
     }
     describeSkin() {
-        const tone = this.skin.get('tone') || '';
-        const blemishes = this.skin.get('blemishes') || '';
-        const features = this.skin.get('features') || '';
-        return `${tone} skin, with ${blemishes}${features == ''?'':'and ' + features}.`;
+        const tone = this._skin.get('tone') || '';
+        const blemishes = this._skin.get('blemishes') || '';
+        const features = this._skin.get('features') || '';
+        return `${tone}, with ${blemishes}${features == ''?'':'and ' + features}`;
     }
 
-    setBody(bodyData) {
+    set body(bodyData) {
         for(let [key, value] of  Object.entries(bodyData)) {
             this._body.set(key,value);
         }
     }
     describeBody() {
-        const height = this.body.get('height') || '';
-        const weight = this.body.get('weight') || '';
-        const musculature = this.body.get('musculature') || '';
-        return `${musculature} body, and is ${height}, weighing ${weight}.`;
+        const height = this._body.get('height') || '';
+        const weight = this._body.get('weight') || '';
+        const musculature = this._body.get('musculature') || '';
+        return `${musculature}, and is ${height} tall, weighing ${weight}`;
     }
 
     serialize() {
