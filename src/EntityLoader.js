@@ -16,7 +16,9 @@ class EntityLoader {
   setArea(name) {
     this.config.area = name;
   }
-
+  setBoard(name) {
+    this.config.board = name;
+  }
   setBundle(name) {
     this.config.bundle = name;
   }

@@ -1,6 +1,7 @@
 /*jshint node: true, esversion: 6 */
 'use strict';
 
+const { notStrictEqual } = require('assert');
 const fs = require('fs'),
     path = require('path'),
     Data = require('./Data'),
@@ -16,7 +17,11 @@ const fs = require('fs'),
     SkillType = require('./SkillType'),
     Helpfile = require('./Helpfile'),
     Logger = require('./Logger'),
-    ChannelManager = require('./ChannelManager')
+    ChannelManager = require('./ChannelManager'),
+    BoardManager = require('./BoardManager'),
+    Board = require('./Board'),
+    NoteManager = require('./NoteManager'),
+    Note = require('./Note')
 ;
 
 const { AttributeFormula } = require('./Attribute');
@@ -103,6 +108,8 @@ class BundleManager {
       { path: 'behaviors/', fn: 'loadBehaviors' },
 
       { path: 'channels.js', fn: 'loadChannels' },
+      { path: 'boards/', fn: 'loadBoards'},
+
       { path: 'commands/', fn: 'loadCommands' },
       { path: 'effects/', fn: 'loadEffects' },
       { path: 'input-events/', fn: 'loadInputEvents' },
@@ -454,6 +461,33 @@ class BundleManager {
     Logger.verbose(`\tENDLOAD: Channels...`);
   }
 
+  async loadBoards(bundle, boardsFile) {
+    Logger.verbose(`\tLOAD: Note Boards...`);
+    const boardLoader = this.loaderRegistry.get('boards');
+    const noteLoader = this.loaderRegistry.get('notes');
+    let boards = [];
+    let notes = [];
+
+    if (!await boardLoader.hasData()) {
+      return boards;
+    }
+
+    boards = await boardLoader.fetchAll();
+    notes = await noteLoader.fetchAll();
+
+    boards.forEach(data => {
+      let board = new Board(data);
+      board.setLoader(noteLoader);
+      this.state.BoardManager.addBoard(board);
+    });
+
+    notes.forEach(data => {
+      let note = new Note(data);
+      this.state.BoardManager.getBoard(note.board).addNote(note);
+    })
+
+    Logger.verbose(`\tENDLOAD: Note Boards...`);
+  }
   /**
    * @param {string} bundle
    * @param {string} helpDir
