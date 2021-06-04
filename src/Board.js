@@ -42,6 +42,11 @@ class Board {
         }
         return null;
     }
+
+    removeNote(number) {
+        this.notes.delete(number);
+        this.loader.update(number, null);
+    }
 }
 
 module.exports = Board;

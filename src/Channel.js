@@ -85,11 +85,11 @@ class Channel {
     Broadcast.sayAt(this.name, sender, message, eval(this.prefixToSource), eval(this.suffix));
     // Private channels also send the target player to the formatter
     if (this.audience instanceof PrivateAudience) {
-      Broadcast.sayAt(this.name, this.audience, message, eval(this.prefixToTarget), eval(this.suffix));
+      Broadcast.sayAt(this.name, this.audience, message, '\n\r' + eval(this.prefixToTarget), eval(this.suffix));
     }
     else {
       // send to audience targets
-      Broadcast.sayAt(this.name, this.audience, message, eval(this.prefixToOthers), eval(this.suffix));
+      Broadcast.sayAt(this.name, this.audience, message, '\n\r' + eval(this.prefixToOthers), eval(this.suffix));
     }
     // strip color tags
     const rawMessage = message.replace(/\<\/?\w+?\>/gm, '');
