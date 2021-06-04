@@ -11,6 +11,7 @@ class Note extends GameEntity {
             this.subject = null;
             this.body = null;
             this.number = null
+            this.dateWritten = null;
         }
         else {
             this.board = data.board || null;
@@ -19,6 +20,7 @@ class Note extends GameEntity {
             this.subject = data.subject || null;
             this.body = data.body || null;
             this.number = data.number || null;
+            this.dateWritten = data.dateWritten || '01 Jan 12:00';
         }
     }
     serialize() {
@@ -28,7 +30,8 @@ class Note extends GameEntity {
             'from': this.from,
             'to': this.to,
             'subject': this.subject,
-            'body': this.body
+            'body': this.body,
+            'dateWritten': this.dateWritten
         }
     }
 }

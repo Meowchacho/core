@@ -7,11 +7,28 @@ class Board {
         this.loader = null
         this.id = data.id;
         this.notes = new Map();
+        this.nextNoteNumber = -1;
     }
 
+    getNextNoteNumber() {
+        if (this.nextNoteNumber == -1) {
+            this.notes.forEach((value, key) => {
+                if (value.number > this.nextNoteNumber)
+                {
+                    this.nextNoteNumber = value.number;
+                }
+            })
+        }
+
+        let newNumber = this.nextNoteNumber;
+        this.nextNoteNumber++;
+        return newNumber;
+    }
+    
     setLoader(loader) {
         this.loader = loader;
     }
+
     addNote(note) {
         this.notes.set(note.number, note);
         this.loader.update({'id':note.number,'board':note.board}, note.serialize());
