@@ -20,7 +20,7 @@ class Note extends GameEntity {
             this.subject = data.subject || null;
             this.body = data.body || null;
             this.number = data.number || null;
-            this.dateWritten = data.dateWritten || '01 Jan 12:00';
+            this.dateWritten = data.dateWritten || new Date("January 1, 2020");
         }
     }
     serialize() {

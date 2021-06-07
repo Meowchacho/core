@@ -1,4 +1,5 @@
 'use strict';
+const PlayerRoles = require('./PlayerRoles');
 
 class Board {
     constructor(data) {
@@ -7,31 +8,41 @@ class Board {
         this.loader = null
         this.id = data.id;
         this.notes = new Map();
-        this.nextNoteNumber = -1;
+        this.nextNoteNumber = 0;
     }
 
+    serialize() {
+        return {
+            'title': this.title,
+            'id': this.id,
+            'audience': this.audience,
+            'nextNoteNumber': this.nextNoteNumber
+        }
+    }
     getNextNoteNumber() {
-        if (this.nextNoteNumber == -1) {
+        if (this.nextNoteNumber == 0) {
             this.notes.forEach((value, key) => {
                 if (value.number > this.nextNoteNumber)
                 {
                     this.nextNoteNumber = value.number;
                 }
             })
+            this.nextNoteNumber++;
         }
 
-        let newNumber = this.nextNoteNumber;
+        const value = this.nextNoteNumber;
         this.nextNoteNumber++;
-        return newNumber;
+        
+        return value;
     }
     
     setLoader(loader) {
         this.loader = loader;
     }
 
-    addNote(note) {
+    async addNote(note) {
         this.notes.set(note.number, note);
-        this.loader.update({'id':note.number,'board':note.board}, note.serialize());
+        await this.loader.update({'id':note.number,'board':note.board}, note.serialize());
     }
 
     getAllNotes(player) {
@@ -46,7 +57,7 @@ class Board {
     }
 
     canSeeNote(note, player) {
-        if (note.to === 'all') {
+        if (note.to === 'all' || note.from === player.name || player.role === PlayerRoles.ADMIN) {
             return true;
         }
 
@@ -54,15 +65,30 @@ class Board {
     }
 
     getNote(number, player) {
-        if (this.canSeeNote(this.notes.get(number), player)) {
-            return this.notes.get(number);
+        const note = this.notes.get(number);
+
+        if (!note || !this.canSeeNote(note,player)) {
+            return null
         }
-        return null;
+        return note;
     }
 
-    removeNote(number) {
+    async removeNote(number) {
         this.notes.delete(number);
-        this.loader.update(number, null);
+        await this.loader.update(number, null);
+    }
+    
+    doRemoveNote(number, player) {
+        const note = this.getNote(number,player);
+
+        if (!note) {
+            return false;
+        }
+
+        if (note.from === player.name || player.role === PlayerRoles.ADMIN ) {
+            this.removeNote(number);
+         return true;
+        }
     }
 }
 

@@ -35,7 +35,6 @@ class Broadcast {
       }
 
       if (target.socket._prompted) {
- //       target.socket.write('\r\n');
         target.socket._prompted = false;
       }
 
@@ -57,9 +56,15 @@ class Broadcast {
       }
 
       let completeMessage = `${prefixColor}${prefix}${messageColor}${message}${suffixColor}${suffix}`;
+
+      if (type === 'emote' && source.sender) {
+        completeMessage = completeMessage.replace(new RegExp(target.name+'\'s','ig'), 'your');
+        completeMessage = completeMessage.replace(new RegExp(target.name,'ig'), 'you');
+      }
+
       target.socket.write(completeMessage, 'utf-8', wrapWidth);
 
-      if (type != 'system' && type != 'prompt' &&target.name != source.name) {
+      if (type !== 'system' && type !== 'prompt' && target.name != source.name) {
         Broadcast.prompt(target);
       }
     }
